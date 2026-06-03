@@ -1,0 +1,24 @@
+COPYRIGHT NOTICE
+
+Ruins Picker
+[OOF] OrganizedChaos
+
+Copyright (c) 2026 PlatinumBoy.
+All project code, layout, styling, and original app assets are owned by PlatinumBoy unless otherwise noted.
+
+LICENSE
+This project is released under the MIT License.
+See LICENSE.txt for the full license terms.
+
+FAN-MADE DISCLAIMER
+Ruins Picker is a fan-made utility created for union organization and player-pick management.
+
+It is not affiliated with, endorsed by, sponsored by, or officially connected to X-Clash, its developers, publishers, or any related company.
+
+TRADEMARKS
+Any game names, event names, or references are used only for descriptive purposes.
+All related trademarks and game assets belong to their respective owners.
+
+APP ICON / GENERATED ASSETS NOTE
+Any custom icon artwork or visual assets included in this project are intended as original/fan-made app assets for this utility.
+Do not use official game logos or copyrighted game artwork unless you have permission.
