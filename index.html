@@ -1,0 +1,2328 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08121d" id="themeColorMeta" />
+  <title>Ruins Picker v0.13</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    :root {
+      --bg-0: #04070b;
+      --bg-1: #08121d;
+      --bg-2: #102237;
+      --glass-opacity: 0.78;
+      --glass-strong-opacity: 0.88;
+      --glass: rgb(13 25 40 / var(--glass-opacity));
+      --glass-strong: rgb(16 34 55 / var(--glass-strong-opacity));
+      --line: rgba(255, 255, 255, 0.14);
+      --line-strong: rgba(255, 255, 255, 0.24);
+      --text: #f6f1e8;
+      --muted: rgba(246, 241, 232, 0.68);
+      --gold: #d4a84f;
+      --green: #214d3a;
+      --green-2: #2f6f56;
+      --berry: #6f274d;
+      --berry-2: #963d68;
+      --navy: #0c2036;
+      --danger: #ba4b46;
+      --shadow: rgba(0, 0, 0, 0.42);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --tap: 48px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% -10%, rgba(47, 111, 86, 0.36), transparent 34rem),
+        radial-gradient(circle at 95% 10%, rgba(111, 39, 77, 0.32), transparent 34rem),
+        linear-gradient(145deg, var(--bg-0), var(--bg-1) 48%, #10110c);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      min-height: var(--tap);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+      cursor: pointer;
+      padding: 0.78rem 1rem;
+      transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, opacity 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:hover { background: rgba(255,255,255,0.13); border-color: var(--line-strong); }
+    button:active { transform: translateY(1px) scale(0.99); }
+    button:disabled { opacity: 0.42; cursor: not-allowed; }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      color: var(--text);
+      background: rgba(0,0,0,0.24);
+      padding: 0.88rem 1rem;
+      outline: none;
+      min-height: var(--tap);
+    }
+
+    select option { color: #111; }
+    input:focus, textarea:focus, select:focus { border-color: rgba(212,168,79,0.65); box-shadow: 0 0 0 4px rgba(212,168,79,0.12); }
+    textarea { min-height: 150px; resize: vertical; }
+
+    .splash {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      background: #000;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity 620ms ease, visibility 620ms ease;
+    }
+
+    .splash.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .splash::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(255,255,255,0.12), transparent 15rem),
+        radial-gradient(circle at 38% 60%, rgba(47,111,86,0.16), transparent 19rem),
+        radial-gradient(circle at 64% 62%, rgba(111,39,77,0.14), transparent 19rem);
+      opacity: 0.85;
+      animation: splashAmbient 2.6s ease-in-out forwards;
+    }
+
+    .splash::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: calc(50% + 4.7rem);
+      width: min(74vw, 360px);
+      height: 12px;
+      border-radius: 999px;
+      background: radial-gradient(ellipse at center, rgba(255,255,255,0.22), transparent 70%);
+      transform: translateX(-50%) scaleX(0.18);
+      opacity: 0;
+      filter: blur(7px);
+      animation: landingShadow 900ms 120ms ease-out forwards;
+      pointer-events: none;
+    }
+
+    .splash-card {
+      position: relative;
+      z-index: 1;
+      width: min(88vw, 590px);
+      display: grid;
+      justify-items: center;
+      gap: 0.62rem;
+      text-align: center;
+      transform-origin: center bottom;
+      animation: dropAndSplat 980ms cubic-bezier(.16,.92,.24,1) forwards, splashCardExit 520ms 2.55s ease forwards;
+    }
+
+    .splash-title {
+      margin: 0;
+      color: rgba(255,255,255,0.96);
+      font-size: clamp(2rem, 9vw, 4.8rem);
+      font-weight: 900;
+      letter-spacing: -0.08em;
+      line-height: 0.88;
+      text-transform: none;
+      text-shadow:
+        0 0 8px rgba(255,255,255,0.92),
+        0 0 22px rgba(255,255,255,0.42),
+        0 0 44px rgba(47,111,86,0.28),
+        0 12px 34px rgba(0,0,0,0.82);
+      animation: softNeonPulse 1.35s 980ms ease-in-out infinite alternate;
+    }
+
+    .splash-subtitle {
+      margin: 0.16rem 0 0;
+      color: rgba(246,241,232,0.60);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(0.48rem, 1.75vw, 0.64rem);
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      text-transform: none;
+      text-shadow: none;
+      opacity: 0;
+      animation: subtitleSettle 480ms 960ms ease-out forwards;
+    }
+
+    .splash-bar {
+      width: min(76vw, 410px);
+      height: 9px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.26);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      box-shadow:
+        inset 0 0 18px rgba(0,0,0,0.56),
+        0 0 20px rgba(255,255,255,0.12);
+      opacity: 0;
+      animation: subtitleSettle 480ms 880ms ease-out forwards;
+    }
+
+    .splash-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(255,255,255,0.38), rgba(255,255,255,0.96), rgba(212,168,79,0.70));
+      box-shadow: 0 0 22px rgba(255,255,255,0.54);
+      animation: loadingFill 2.05s 0.72s ease-out forwards;
+    }
+
+    @keyframes dropAndSplat {
+      0% { transform: translateY(-112vh) scaleX(0.96) scaleY(1.07); opacity: 0; }
+      42% { opacity: 1; }
+      78% { transform: translateY(0) scaleX(1.08) scaleY(0.82); opacity: 1; }
+      100% { transform: translateY(0) scaleX(1) scaleY(1); opacity: 1; }
+    }
+
+    @keyframes splashCardExit {
+      to { transform: translateY(10px) scale(0.985); opacity: 0; }
+    }
+
+    @keyframes subtitleSettle {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes landingShadow {
+      0% { opacity: 0; transform: translateX(-50%) scaleX(0.18); }
+      78% { opacity: 0.88; transform: translateX(-50%) scaleX(1); }
+      100% { opacity: 0.34; transform: translateX(-50%) scaleX(0.92); }
+    }
+
+    @keyframes softNeonPulse {
+      from {
+        text-shadow:
+          0 0 7px rgba(255,255,255,0.78),
+          0 0 18px rgba(255,255,255,0.34),
+          0 0 38px rgba(47,111,86,0.22),
+          0 12px 34px rgba(0,0,0,0.82);
+      }
+      to {
+        text-shadow:
+          0 0 12px rgba(255,255,255,1),
+          0 0 30px rgba(255,255,255,0.55),
+          0 0 58px rgba(47,111,86,0.34),
+          0 12px 34px rgba(0,0,0,0.82);
+      }
+    }
+
+    @keyframes splashAmbient {
+      0% { opacity: 0; transform: scale(0.96); }
+      100% { opacity: 0.86; transform: scale(1.04); }
+    }
+
+    @keyframes loadingFill {
+      0% { width: 0%; }
+      58% { width: 72%; }
+      100% { width: 100%; }
+    }
+
+    .app-shell {
+      width: min(1120px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: calc(env(safe-area-inset-top) + 18px) 0 42px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 1rem;
+      align-items: center;
+      grid-template-columns: 1fr auto;
+      margin-bottom: 16px;
+    }
+
+    .brand-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(13,25,40,0.76), rgba(18,44,37,0.48));
+      box-shadow: 0 22px 70px var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 1rem;
+    }
+
+    .brand-card::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(90deg, transparent, rgba(212,168,79,0.18), transparent);
+      transform: translateX(-70%);
+      animation: sheen 6s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes sheen { to { transform: translateX(70%); } }
+
+    .logo-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      min-width: 0;
+      position: relative;
+    }
+
+    .logo-img {
+      width: min(320px, 44vw);
+      max-height: 76px;
+      object-fit: contain;
+      object-position: left center;
+      filter: drop-shadow(0 10px 16px rgba(0,0,0,0.36));
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 5vw, 3rem);
+      letter-spacing: -0.06em;
+      line-height: 0.95;
+    }
+
+    .tagline {
+      margin: 0.48rem 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(70px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(0,0,0,0.16);
+      padding: 0.7rem 0.8rem;
+      min-width: 84px;
+      text-align: center;
+    }
+
+    .stat strong { display: block; font-size: 1.2rem; }
+    .stat span { display: block; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(310px, 0.88fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 16px; }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--glass);
+      box-shadow: 0 22px 70px var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 1rem;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hint, .small { color: var(--muted); font-size: 0.88rem; }
+    .small { font-size: 0.8rem; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 0.65rem;
+    }
+
+    .btn-primary {
+      border-color: rgba(212,168,79,0.34);
+      background: linear-gradient(135deg, rgba(212,168,79,0.30), rgba(47,111,86,0.42));
+    }
+
+    .btn-green { background: rgba(47,111,86,0.34); }
+    .btn-berry { background: rgba(111,39,77,0.36); }
+    .btn-danger { background: rgba(186,75,70,0.26); }
+    .btn-ghost { background: rgba(255,255,255,0.055); }
+    .wide { grid-column: 1 / -1; }
+
+    .category {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: rgba(0,0,0,0.16);
+      overflow: hidden;
+    }
+
+    .category-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem 0.3rem;
+    }
+
+    .category h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      letter-spacing: -0.01em;
+    }
+
+    .category-count {
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .main .category-head { color: #ffda85; }
+    .subs .category-head { color: #b8e6d0; }
+    .soup .category-head { color: #ffd1e5; }
+
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.65rem;
+      padding: 0.85rem 1rem 1rem;
+    }
+
+    .tile {
+      position: relative;
+      min-height: 62px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.09);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 0.68rem 0.48rem;
+      font-weight: 800;
+      font-size: clamp(1rem, 3.3vw, 1.18rem);
+      overflow-wrap: anywhere;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 22px rgba(0,0,0,0.18);
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tile:hover { transform: translateY(-1px); border-color: var(--line-strong); background: rgba(255,255,255,0.13); }
+    .tile:active { transform: scale(0.985); }
+    .tile.named { background: linear-gradient(135deg, rgba(111,39,77,0.48), rgba(212,168,79,0.22)); }
+    .tile.locked { border-color: rgba(212,168,79,0.70); }
+    .tile.locked::after {
+      content: "LOCKED";
+      position: absolute;
+      right: 8px;
+      bottom: 7px;
+      font-size: 0.52rem;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.58);
+    }
+    .tile.swap-pending { outline: 3px solid rgba(212,168,79,0.44); }
+
+    .player-form { display: grid; grid-template-columns: 1fr auto; gap: 0.65rem; margin-bottom: 0.85rem; }
+
+    .player-list {
+      display: grid;
+      gap: 0.5rem;
+      max-height: 280px;
+      overflow: auto;
+      padding-right: 0.15rem;
+    }
+
+    .player-empty {
+      border: 1px dashed var(--line-strong);
+      border-radius: 18px;
+      padding: 1rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.045);
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 0.45rem 0.45rem 0.45rem 0.85rem;
+      background: rgba(0,0,0,0.16);
+    }
+
+    .player-row button { min-height: 38px; padding: 0.4rem 0.7rem; font-size: 0.82rem; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 35;
+      display: none;
+      align-items: end;
+      justify-content: center;
+      background: rgba(0,0,0,0.58);
+      padding: 12px;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: min(560px, 100%);
+      border: 1px solid var(--line-strong);
+      border-radius: 30px;
+      background: rgba(8,18,29,0.92);
+      box-shadow: 0 30px 120px rgba(0,0,0,0.70);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      padding: 1rem;
+      animation: modalRise 180ms ease-out;
+    }
+
+    @keyframes modalRise {
+      from { transform: translateY(16px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-actions { display: grid; gap: 0.65rem; margin-top: 0.8rem; }
+    .modal-actions.two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+
+    .toast {
+      position: fixed;
+      z-index: 60;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom) + 18px);
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.76);
+      color: var(--text);
+      padding: 0.72rem 1rem;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.36);
+      transition: opacity 180ms ease, transform 180ms ease;
+      white-space: nowrap;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .history-list { display: grid; gap: 0.55rem; }
+    .history-item { border: 1px solid var(--line); background: rgba(0,0,0,0.15); border-radius: 18px; padding: 0.75rem; color: var(--muted); font-size: 0.85rem; }
+    .history-item strong { color: var(--text); display:block; margin-bottom: .25rem; }
+
+    .history-purge-link {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0.15rem 0 0;
+      margin-top: 0.3rem;
+      width: fit-content;
+      font: inherit;
+      font-size: 0.78rem;
+      line-height: 1.2;
+      text-align: left;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+      opacity: 0.82;
+    }
+
+    .history-purge-link:hover,
+    .history-purge-link:focus-visible {
+      color: var(--berry);
+      opacity: 1;
+      outline: none;
+    }
+
+
+    .title-row {
+      justify-content: space-between;
+    }
+
+    .overlay-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem;
+      margin-top: 0.95rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .overlay-tools button {
+      min-height: 42px;
+      padding: 0.58rem 0.9rem;
+      font-size: 0.88rem;
+    }
+
+    .opacity-control {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.18);
+      padding: 0.48rem 0.72rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .opacity-control input {
+      width: 110px;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      accent-color: var(--gold);
+    }
+
+    .players-card.collapsed .player-panel {
+      display: none;
+    }
+
+    .players-card.collapsed .card-title {
+      margin-bottom: 0;
+    }
+
+    .collapse-btn {
+      min-height: 38px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.82rem;
+    }
+
+    html.compact-mode {
+      --glass-opacity: 0.48;
+      --glass-strong-opacity: 0.66;
+    }
+
+    html.compact-mode body {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(47, 111, 86, 0.26), transparent 18rem),
+        radial-gradient(circle at 100% 12%, rgba(111, 39, 77, 0.24), transparent 18rem),
+        linear-gradient(145deg, rgba(4,7,11,0.92), rgba(8,18,29,0.88));
+    }
+
+    html.compact-mode .app-shell {
+      width: min(430px, calc(100% - 12px));
+      padding-top: calc(env(safe-area-inset-top) + 8px);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+    }
+
+    html.compact-mode .hero,
+    html.compact-mode .grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    html.compact-mode .brand-card,
+    html.compact-mode .card,
+    html.compact-mode .category {
+      border-radius: 20px;
+      padding: 0.82rem;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.34);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    html.compact-mode .category { padding: 0; }
+    html.compact-mode .stack { gap: 10px; }
+    html.compact-mode .mini-stats,
+    html.compact-mode .history-card { display: none; }
+    html.compact-mode h1 { font-size: clamp(1.55rem, 9vw, 2.15rem); }
+    html.compact-mode .tagline { font-size: 0.84rem; margin-top: 0.35rem; }
+    html.compact-mode .overlay-tools { margin-top: 0.7rem; }
+    html.compact-mode .opacity-control { width: 100%; justify-content: space-between; }
+    html.compact-mode .opacity-control input { width: min(170px, 46vw); }
+
+    html.compact-mode .controls {
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 0.5rem;
+    }
+
+    html.compact-mode .controls button {
+      min-height: 54px;
+      padding: 0.65rem 0.55rem;
+      font-size: 0.88rem;
+    }
+
+    html.compact-mode #copyBtn {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(env(safe-area-inset-bottom) + 10px);
+      z-index: 34;
+      width: min(406px, calc(100% - 24px));
+      margin: 0 auto;
+      min-height: 62px;
+      border-radius: 22px;
+      font-size: 1.05rem;
+      box-shadow: 0 18px 54px rgba(0,0,0,0.58), 0 0 0 1px rgba(212,168,79,0.24) inset;
+    }
+
+    html.compact-mode .category-head {
+      padding: 0.72rem 0.82rem 0.2rem;
+    }
+
+    html.compact-mode .tile-grid,
+    html.compact-mode .main .tile-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+      padding: 0.72rem 0.82rem 0.82rem;
+    }
+
+    html.compact-mode .tile {
+      min-height: 74px;
+      border-radius: 18px;
+      font-size: clamp(1.1rem, 5vw, 1.32rem);
+    }
+
+    html.compact-mode .player-list {
+      max-height: 180px;
+    }
+
+    html.compact-mode .modal-backdrop {
+      align-items: end;
+      padding: 8px;
+    }
+
+    html.compact-mode .modal {
+      border-radius: 24px;
+    }
+
+    @media (max-width: 880px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      .mini-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 520px) {
+      .app-shell { width: min(100% - 18px, 1120px); padding-top: calc(env(safe-area-inset-top) + 10px); }
+      .brand-card, .card, .category { border-radius: 22px; }
+      .logo-row { align-items: flex-start; }
+      .logo-img { width: 122px; max-height: 46px; }
+      .controls, .modal-actions.two { grid-template-columns: 1fr; }
+      .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .main .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .player-form { grid-template-columns: 1fr; }
+    }
+
+
+
+    /* v0.4: real compact overlay tuning - denser, no button overlap */
+    html.compact-mode .app-shell {
+      width: min(360px, calc(100vw - 8px));
+      padding-top: calc(env(safe-area-inset-top) + 4px);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 74px);
+    }
+
+    html.compact-mode .hero,
+    html.compact-mode .grid,
+    html.compact-mode .stack {
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    html.compact-mode .brand-card,
+    html.compact-mode .card,
+    html.compact-mode .category {
+      border-radius: 16px;
+      padding: 0.55rem;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.30);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    html.compact-mode .category { padding: 0; }
+    html.compact-mode .card-title { margin-bottom: 0.42rem; }
+    html.compact-mode .logo-row { display: block; }
+    html.compact-mode h1 { font-size: 1.34rem; letter-spacing: -0.045em; line-height: 1; }
+    html.compact-mode .tagline { display: none; }
+    html.compact-mode .hint { display: none; }
+    html.compact-mode h2 { font-size: 0.72rem; letter-spacing: 0.07em; }
+
+    html.compact-mode .overlay-tools {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.42rem;
+      margin-top: 0.5rem;
+      align-items: center;
+    }
+
+    html.compact-mode .overlay-tools button,
+    html.compact-mode .collapse-btn {
+      min-height: 34px;
+      padding: 0.35rem 0.62rem;
+      font-size: 0.74rem;
+      border-radius: 14px;
+    }
+
+    html.compact-mode .opacity-control {
+      width: 100%;
+      min-height: 34px;
+      padding: 0.32rem 0.5rem;
+      border-radius: 14px;
+      gap: 0.35rem;
+      font-size: 0.70rem;
+    }
+
+    html.compact-mode .opacity-control input {
+      width: min(92px, 32vw);
+    }
+
+    html.compact-mode #opacityValue {
+      min-width: 30px;
+      text-align: right;
+    }
+
+    html.compact-mode .controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.38rem;
+    }
+
+    html.compact-mode .controls button {
+      min-height: 40px;
+      padding: 0.42rem 0.35rem;
+      font-size: 0.74rem;
+      border-radius: 15px;
+    }
+
+    html.compact-mode #copyBtn {
+      position: sticky !important;
+      left: auto;
+      right: auto;
+      bottom: calc(env(safe-area-inset-bottom) + 6px);
+      width: 100%;
+      margin-top: 0.08rem;
+      min-height: 44px;
+      border-radius: 16px;
+      font-size: 0.92rem;
+      z-index: 28;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.42), 0 0 0 1px rgba(212,168,79,0.20) inset;
+    }
+
+    html.compact-mode .category-head {
+      padding: 0.48rem 0.58rem 0.12rem;
+    }
+
+    html.compact-mode .category h3 {
+      font-size: 0.86rem;
+    }
+
+    html.compact-mode .category-count {
+      font-size: 0.66rem;
+    }
+
+    html.compact-mode .tile-grid,
+    html.compact-mode .main .tile-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.36rem;
+      padding: 0.5rem 0.58rem 0.58rem;
+    }
+
+    html.compact-mode .tile {
+      min-height: 50px;
+      border-radius: 14px;
+      padding: 0.35rem 0.2rem;
+      font-size: clamp(0.92rem, 4vw, 1.08rem);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 14px rgba(0,0,0,0.16);
+    }
+
+    html.compact-mode .tile.locked::after {
+      right: 5px;
+      bottom: 4px;
+      font-size: 0.43rem;
+    }
+
+    html.compact-mode .player-form {
+      grid-template-columns: 1fr;
+      gap: 0.38rem;
+      margin-bottom: 0.45rem;
+    }
+
+    html.compact-mode input,
+    html.compact-mode textarea,
+    html.compact-mode select {
+      min-height: 40px;
+      border-radius: 14px;
+      padding: 0.55rem 0.65rem;
+      font-size: 0.82rem;
+    }
+
+    html.compact-mode .player-list { max-height: 132px; gap: 0.35rem; }
+    html.compact-mode .player-row { border-radius: 14px; padding: 0.32rem 0.32rem 0.32rem 0.62rem; font-size: 0.82rem; }
+    html.compact-mode .player-row button { min-height: 32px; font-size: 0.70rem; padding: 0.22rem 0.48rem; }
+    html.compact-mode .player-empty { border-radius: 14px; padding: 0.62rem; font-size: 0.78rem; }
+
+    @media (max-width: 360px) {
+      html.compact-mode .tile-grid,
+      html.compact-mode .main .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      html.compact-mode .tile { min-height: 56px; }
+    }
+
+
+
+
+    /* v0.5: true phone floating-window compact mode */
+    html.compact-mode {
+      --radius-xl: 12px;
+      --radius-lg: 10px;
+      --radius-md: 9px;
+      --tap: 34px;
+      font-size: 13px;
+    }
+
+    html.compact-mode body {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(47, 111, 86, 0.20), transparent 12rem),
+        radial-gradient(circle at 100% 0%, rgba(111, 39, 77, 0.18), transparent 12rem),
+        rgba(4, 7, 11, 0.78) !important;
+    }
+
+    html.compact-mode .app-shell {
+      width: min(318px, calc(100vw - 4px)) !important;
+      padding: calc(env(safe-area-inset-top) + 2px) 0 calc(env(safe-area-inset-bottom) + 58px) !important;
+    }
+
+    html.compact-mode .hero,
+    html.compact-mode .grid,
+    html.compact-mode .stack {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 4px !important;
+      margin: 0 0 4px !important;
+    }
+
+    html.compact-mode .brand-card,
+    html.compact-mode .card,
+    html.compact-mode .category {
+      border-radius: 12px !important;
+      padding: 6px !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.24) !important;
+      border-color: rgba(255,255,255,0.12) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+    }
+
+    html.compact-mode .category {
+      padding: 0 !important;
+    }
+
+    html.compact-mode .logo-row,
+    html.compact-mode .title-row {
+      display: block !important;
+    }
+
+    html.compact-mode h1 {
+      font-size: 1.18rem !important;
+      line-height: 1 !important;
+      letter-spacing: -0.035em !important;
+      margin: 0 !important;
+    }
+
+    html.compact-mode .tagline,
+    html.compact-mode .hint,
+    html.compact-mode .mini-stats,
+    html.compact-mode .history-card {
+      display: none !important;
+    }
+
+    html.compact-mode .overlay-tools {
+      display: grid !important;
+      grid-template-columns: auto minmax(0, 1fr) !important;
+      gap: 4px !important;
+      margin-top: 5px !important;
+      align-items: center !important;
+    }
+
+    html.compact-mode .overlay-tools button,
+    html.compact-mode .collapse-btn {
+      min-height: 28px !important;
+      padding: 2px 8px !important;
+      font-size: 0.72rem !important;
+      border-radius: 10px !important;
+      white-space: nowrap !important;
+    }
+
+    html.compact-mode .opacity-control {
+      min-height: 28px !important;
+      padding: 2px 6px !important;
+      gap: 4px !important;
+      border-radius: 10px !important;
+      font-size: 0.68rem !important;
+      width: 100% !important;
+    }
+
+    html.compact-mode .opacity-control input {
+      width: min(88px, 30vw) !important;
+    }
+
+    html.compact-mode #opacityValue {
+      min-width: 28px !important;
+      text-align: right !important;
+    }
+
+    html.compact-mode .card-title {
+      margin-bottom: 4px !important;
+      gap: 6px !important;
+    }
+
+    html.compact-mode h2 {
+      font-size: 0.70rem !important;
+      line-height: 1 !important;
+      letter-spacing: 0.055em !important;
+    }
+
+    html.compact-mode .controls {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 4px !important;
+    }
+
+    html.compact-mode .controls button {
+      min-height: 32px !important;
+      padding: 4px 5px !important;
+      font-size: 0.70rem !important;
+      border-radius: 11px !important;
+      line-height: 1.05 !important;
+    }
+
+    html.compact-mode #shuffleAllBtn,
+    html.compact-mode #shuffleUnlockedBtn {
+      min-height: 38px !important;
+      font-size: 0.74rem !important;
+      font-weight: 800 !important;
+    }
+
+    html.compact-mode #copyBtn {
+      position: fixed !important;
+      left: max(4px, env(safe-area-inset-left)) !important;
+      right: max(4px, env(safe-area-inset-right)) !important;
+      bottom: max(4px, env(safe-area-inset-bottom)) !important;
+      z-index: 45 !important;
+      width: auto !important;
+      min-height: 46px !important;
+      margin: 0 !important;
+      border-radius: 14px !important;
+      font-size: 0.92rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.01em !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.52), 0 0 0 1px rgba(212,168,79,0.25) inset !important;
+    }
+
+    html.compact-mode .category-head {
+      padding: 5px 7px 0 !important;
+    }
+
+    html.compact-mode .category h3 {
+      font-size: 0.82rem !important;
+      line-height: 1.05 !important;
+    }
+
+    html.compact-mode .category-count {
+      font-size: 0.62rem !important;
+    }
+
+    html.compact-mode .tile-grid,
+    html.compact-mode .main .tile-grid {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 4px !important;
+      padding: 6px 7px 7px !important;
+    }
+
+    html.compact-mode .tile {
+      min-height: 46px !important;
+      border-radius: 11px !important;
+      padding: 3px !important;
+      font-size: 0.98rem !important;
+      font-weight: 900 !important;
+      line-height: 1.05 !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 5px 10px rgba(0,0,0,0.14) !important;
+    }
+
+    html.compact-mode .tile.locked::after {
+      content: "🔒" !important;
+      right: 3px !important;
+      bottom: 2px !important;
+      font-size: 0.58rem !important;
+      letter-spacing: 0 !important;
+    }
+
+    html.compact-mode .players-card {
+      order: 50 !important;
+    }
+
+    html.compact-mode .players-card .card-title {
+      display: flex !important;
+      margin-bottom: 0 !important;
+    }
+
+    html.compact-mode .players-card:not(.collapsed) .card-title {
+      margin-bottom: 5px !important;
+    }
+
+    html.compact-mode .player-form {
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      gap: 4px !important;
+      margin-bottom: 5px !important;
+    }
+
+    html.compact-mode input,
+    html.compact-mode textarea,
+    html.compact-mode select {
+      min-height: 32px !important;
+      border-radius: 10px !important;
+      padding: 5px 7px !important;
+      font-size: 0.78rem !important;
+    }
+
+    html.compact-mode .player-list {
+      max-height: 116px !important;
+      gap: 4px !important;
+    }
+
+    html.compact-mode .player-row {
+      border-radius: 10px !important;
+      padding: 4px 4px 4px 7px !important;
+      font-size: 0.78rem !important;
+    }
+
+    html.compact-mode .player-row button {
+      min-height: 28px !important;
+      font-size: 0.66rem !important;
+      padding: 2px 6px !important;
+    }
+
+    html.compact-mode .player-empty {
+      border-radius: 10px !important;
+      padding: 7px !important;
+      font-size: 0.72rem !important;
+    }
+
+    html.compact-mode .modal-backdrop {
+      align-items: end !important;
+      padding: 4px !important;
+    }
+
+    html.compact-mode .modal {
+      width: min(318px, calc(100vw - 8px)) !important;
+      border-radius: 16px !important;
+      padding: 10px !important;
+    }
+
+    html.compact-mode .modal .card-title {
+      display: flex !important;
+      margin-bottom: 8px !important;
+    }
+
+    html.compact-mode .modal-actions.two {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 4px !important;
+    }
+
+    @media (max-width: 300px) {
+      html.compact-mode .app-shell,
+      html.compact-mode .modal { width: calc(100vw - 4px) !important; }
+      html.compact-mode .tile-grid,
+      html.compact-mode .main .tile-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+      html.compact-mode .tile { min-height: 42px !important; font-size: 0.88rem !important; }
+    }
+
+
+
+
+    /* v0.7: forced compact overlay pass - visibly different from full mode */
+    .mode-pill {
+      display: inline-grid;
+      place-items: center;
+      min-height: 24px;
+      margin-top: 0.35rem;
+      padding: 0.18rem 0.5rem;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.22);
+      color: rgba(246,241,232,0.62);
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    html.compact-mode,
+    html.compact-mode body {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
+
+    html.compact-mode body {
+      min-height: 100svh !important;
+      background:
+        radial-gradient(circle at 10% -10%, rgba(47,111,86,0.18), transparent 10rem),
+        radial-gradient(circle at 110% 10%, rgba(111,39,77,0.16), transparent 11rem),
+        rgba(4,7,11,0.46) !important;
+      font-size: 12px !important;
+    }
+
+    html.compact-mode .app-shell {
+      width: min(336px, calc(100vw - 2px)) !important;
+      max-width: min(336px, calc(100vw - 2px)) !important;
+      margin: 0 auto !important;
+      padding: calc(env(safe-area-inset-top) + 2px) 2px calc(env(safe-area-inset-bottom) + 52px) !important;
+    }
+
+    html.compact-mode .hero,
+    html.compact-mode .grid,
+    html.compact-mode .stack {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: 5px !important;
+      margin: 0 0 5px !important;
+      align-items: stretch !important;
+    }
+
+    html.compact-mode .brand-card {
+      padding: 6px 7px !important;
+      min-height: 0 !important;
+      border-radius: 13px !important;
+    }
+
+    html.compact-mode .brand-card::before { display: none !important; }
+
+    html.compact-mode .logo-row,
+    html.compact-mode .title-row {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 0 !important;
+      align-items: start !important;
+    }
+
+    html.compact-mode h1 {
+      font-size: 1.05rem !important;
+      line-height: 1 !important;
+      letter-spacing: -0.035em !important;
+    }
+
+    html.compact-mode .mode-pill {
+      display: none !important;
+    }
+
+    html.compact-mode .tagline,
+    html.compact-mode .mini-stats,
+    html.compact-mode .history-card,
+    html.compact-mode .controls-card .card-title,
+    html.compact-mode .hint {
+      display: none !important;
+    }
+
+    html.compact-mode .overlay-tools {
+      display: grid !important;
+      grid-template-columns: auto minmax(0, 1fr) !important;
+      gap: 4px !important;
+      margin-top: 5px !important;
+    }
+
+    html.compact-mode .overlay-tools button,
+    html.compact-mode .collapse-btn,
+    html.compact-mode button {
+      min-height: 30px !important;
+      padding: 4px 7px !important;
+      border-radius: 10px !important;
+      font-size: 0.72rem !important;
+      line-height: 1 !important;
+    }
+
+    html.compact-mode .opacity-control {
+      min-height: 30px !important;
+      padding: 3px 6px !important;
+      gap: 4px !important;
+      border-radius: 10px !important;
+      font-size: 0.68rem !important;
+    }
+
+    html.compact-mode .opacity-control input {
+      width: clamp(72px, 34vw, 112px) !important;
+    }
+
+    html.compact-mode .card,
+    html.compact-mode .category {
+      border-radius: 13px !important;
+      padding: 6px !important;
+      min-height: 0 !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.22) !important;
+      backdrop-filter: blur(9px) !important;
+      -webkit-backdrop-filter: blur(9px) !important;
+    }
+
+    html.compact-mode .controls-card {
+      padding: 5px !important;
+    }
+
+    html.compact-mode .controls {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 4px !important;
+    }
+
+    html.compact-mode .controls button {
+      min-height: 31px !important;
+      font-size: 0.70rem !important;
+      padding: 4px !important;
+    }
+
+    html.compact-mode #shuffleAllBtn,
+    html.compact-mode #shuffleUnlockedBtn {
+      min-height: 36px !important;
+      font-size: 0.74rem !important;
+      font-weight: 900 !important;
+    }
+
+    html.compact-mode #copyBtn {
+      position: fixed !important;
+      left: max(5px, env(safe-area-inset-left)) !important;
+      right: max(5px, env(safe-area-inset-right)) !important;
+      bottom: max(5px, env(safe-area-inset-bottom)) !important;
+      z-index: 48 !important;
+      display: grid !important;
+      place-items: center !important;
+      width: auto !important;
+      max-width: none !important;
+      min-height: 44px !important;
+      border-radius: 14px !important;
+      font-size: 0.92rem !important;
+      font-weight: 950 !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.56), 0 0 0 1px rgba(212,168,79,0.24) inset !important;
+    }
+
+    html.compact-mode .category {
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    html.compact-mode .category-head {
+      padding: 5px 7px 0 !important;
+    }
+
+    html.compact-mode .category h3 {
+      font-size: 0.80rem !important;
+      line-height: 1 !important;
+    }
+
+    html.compact-mode .category-count {
+      font-size: 0.60rem !important;
+    }
+
+    html.compact-mode .tile-grid,
+    html.compact-mode .main .tile-grid {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 4px !important;
+      padding: 6px 7px 7px !important;
+    }
+
+    html.compact-mode .tile {
+      min-width: 0 !important;
+      min-height: 44px !important;
+      border-radius: 11px !important;
+      padding: 3px !important;
+      font-size: clamp(0.86rem, 5vw, 1.02rem) !important;
+      font-weight: 950 !important;
+      line-height: 1 !important;
+    }
+
+    html.compact-mode .players-card {
+      order: 99 !important;
+    }
+
+    html.compact-mode .players-card .card-title {
+      display: flex !important;
+      margin-bottom: 0 !important;
+      align-items: center !important;
+    }
+
+    html.compact-mode .players-card:not(.collapsed) .card-title {
+      margin-bottom: 5px !important;
+    }
+
+    html.compact-mode .player-form {
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      gap: 4px !important;
+      margin-bottom: 5px !important;
+    }
+
+    html.compact-mode input,
+    html.compact-mode textarea,
+    html.compact-mode select {
+      min-height: 31px !important;
+      border-radius: 10px !important;
+      padding: 5px 7px !important;
+      font-size: 0.76rem !important;
+    }
+
+    html.compact-mode .player-list {
+      max-height: 104px !important;
+      gap: 4px !important;
+    }
+
+    html.compact-mode .player-row {
+      border-radius: 10px !important;
+      padding: 4px 4px 4px 7px !important;
+      font-size: 0.76rem !important;
+    }
+
+    html.compact-mode .modal {
+      width: min(330px, calc(100vw - 8px)) !important;
+      border-radius: 16px !important;
+      padding: 10px !important;
+    }
+
+
+    /* v0.9: compact overlay cleanup - no floating copy overlap, no glass slider, darker standard transparency */
+    .opacity-control {
+      display: none !important;
+    }
+
+    html.compact-mode {
+      --glass-opacity: 0.78 !important;
+      --glass-strong-opacity: 0.88 !important;
+    }
+
+    html.compact-mode body {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(47,111,86,0.16), transparent 9rem),
+        radial-gradient(circle at 110% 5%, rgba(111,39,77,0.13), transparent 10rem),
+        linear-gradient(145deg, rgba(3,6,10,0.96), rgba(7,15,24,0.93) 55%, rgba(8,11,9,0.94)) !important;
+    }
+
+    html.compact-mode .overlay-tools {
+      grid-template-columns: auto !important;
+      margin-top: 4px !important;
+    }
+
+    html.compact-mode .brand-card,
+    html.compact-mode .card {
+      background: rgba(8,18,29,0.82) !important;
+      border-color: rgba(255,255,255,0.16) !important;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.46) !important;
+    }
+
+    html.compact-mode .category {
+      background: rgba(5,12,19,0.72) !important;
+      border-color: rgba(255,255,255,0.15) !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.40) !important;
+    }
+
+    html.compact-mode .tile {
+      background: rgba(18,28,38,0.78) !important;
+      border-color: rgba(255,255,255,0.15) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 12px rgba(0,0,0,0.28) !important;
+    }
+
+    html.compact-mode .tile.named {
+      background: linear-gradient(135deg, rgba(111,39,77,0.70), rgba(47,111,86,0.48)) !important;
+    }
+
+    html.compact-mode .controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      align-items: stretch !important;
+    }
+
+    html.compact-mode #copyBtn,
+    html.compact-mode #lockAllBtn {
+      position: static !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      z-index: auto !important;
+      grid-column: auto !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 34px !important;
+      margin: 0 !important;
+      border-radius: 12px !important;
+      font-size: 0.76rem !important;
+      font-weight: 900 !important;
+      box-shadow: inset 0 0 0 1px rgba(212,168,79,0.18), 0 7px 16px rgba(0,0,0,0.28) !important;
+      transform: none !important;
+    }
+
+    html.compact-mode .app-shell {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 8px) !important;
+    }
+
+    html.compact-mode .player-empty {
+      background: rgba(5,12,19,0.48) !important;
+    }
+
+    /* v0.11: light/dark theme preview */
+    html.light-mode {
+      --bg-0: #fbf4e9;
+      --bg-1: #efe4d2;
+      --bg-2: #d9e7dc;
+      --glass-opacity: 0.70;
+      --glass-strong-opacity: 0.84;
+      --glass: rgba(255, 250, 241, 0.70);
+      --glass-strong: rgba(255, 252, 246, 0.86);
+      --line: rgba(37, 51, 47, 0.16);
+      --line-strong: rgba(37, 51, 47, 0.28);
+      --text: #17231f;
+      --muted: rgba(23, 35, 31, 0.64);
+      --gold: #b9852d;
+      --green: #436b54;
+      --green-2: #668f72;
+      --berry: #9a5573;
+      --berry-2: #b06b8a;
+      --navy: #415b72;
+      --danger: #b35f59;
+      --shadow: rgba(76, 57, 38, 0.18);
+    }
+
+    html.light-mode body {
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% -8%, rgba(102,143,114,0.34), transparent 28rem),
+        radial-gradient(circle at 96% 4%, rgba(176,107,138,0.26), transparent 28rem),
+        linear-gradient(145deg, #fff9f0, #efe5d7 48%, #e2eadf);
+      background-attachment: fixed;
+    }
+
+    html.light-mode button {
+      color: var(--text);
+      background: rgba(255,255,255,0.46);
+      border-color: var(--line);
+    }
+
+    html.light-mode button:hover {
+      background: rgba(255,255,255,0.68);
+      border-color: var(--line-strong);
+    }
+
+    html.light-mode input,
+    html.light-mode textarea,
+    html.light-mode select {
+      color: var(--text);
+      background: rgba(255,255,255,0.58);
+      border-color: var(--line);
+    }
+
+    html.light-mode .brand-card {
+      background: linear-gradient(135deg, rgba(255,250,241,0.78), rgba(222,235,224,0.58));
+      box-shadow: 0 22px 70px rgba(76,57,38,0.15);
+    }
+
+    html.light-mode .brand-card::before {
+      background: linear-gradient(90deg, transparent, rgba(185,133,45,0.18), transparent);
+    }
+
+    html.light-mode .card {
+      background: rgba(255,250,241,0.70);
+      box-shadow: 0 22px 70px rgba(76,57,38,0.14);
+    }
+
+    html.light-mode .category {
+      background: rgba(255,255,255,0.42);
+    }
+
+    html.light-mode .stat,
+    html.light-mode .player-row,
+    html.light-mode .history-item {
+      background: rgba(255,255,255,0.42);
+    }
+
+    html.light-mode .tile {
+      background: rgba(255,255,255,0.52);
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.54), 0 10px 22px rgba(76,57,38,0.11);
+    }
+
+    html.light-mode .tile:hover {
+      background: rgba(255,255,255,0.72);
+    }
+
+    html.light-mode .tile.named {
+      background: linear-gradient(135deg, rgba(176,107,138,0.40), rgba(185,133,45,0.22));
+    }
+
+    html.light-mode .tile.locked::after {
+      color: rgba(23,35,31,0.58);
+    }
+
+    html.light-mode .btn-primary {
+      background: linear-gradient(135deg, rgba(185,133,45,0.34), rgba(102,143,114,0.34));
+    }
+
+    html.light-mode .btn-green { background: rgba(102,143,114,0.28); }
+    html.light-mode .btn-berry { background: rgba(176,107,138,0.28); }
+    html.light-mode .btn-danger { background: rgba(179,95,89,0.24); }
+    html.light-mode .btn-ghost { background: rgba(255,255,255,0.38); }
+
+    html.light-mode .modal {
+      background: rgba(255,250,241,0.92);
+      box-shadow: 0 30px 120px rgba(76,57,38,0.28);
+    }
+
+    html.light-mode .toast {
+      background: rgba(255,250,241,0.92);
+      color: var(--text);
+      box-shadow: 0 18px 48px rgba(76,57,38,0.20);
+    }
+
+    html.light-mode .player-empty {
+      background: rgba(255,255,255,0.34);
+    }
+
+    html.light-mode .mode-pill {
+      background: rgba(255,255,255,0.40);
+      color: rgba(23,35,31,0.64);
+    }
+
+    html.light-mode.compact-mode body {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(102,143,114,0.23), transparent 9rem),
+        radial-gradient(circle at 110% 5%, rgba(176,107,138,0.18), transparent 10rem),
+        linear-gradient(145deg, rgba(255,249,240,0.96), rgba(239,229,215,0.93) 55%, rgba(226,234,223,0.94)) !important;
+    }
+
+    html.light-mode.compact-mode .brand-card,
+    html.light-mode.compact-mode .card {
+      background: rgba(255,250,241,0.82) !important;
+      border-color: rgba(37,51,47,0.16) !important;
+      box-shadow: 0 8px 22px rgba(76,57,38,0.20) !important;
+    }
+
+    html.light-mode.compact-mode .category {
+      background: rgba(255,255,255,0.58) !important;
+      border-color: rgba(37,51,47,0.14) !important;
+      box-shadow: 0 8px 20px rgba(76,57,38,0.15) !important;
+    }
+
+    html.light-mode.compact-mode .tile {
+      background: rgba(255,255,255,0.64) !important;
+      border-color: rgba(37,51,47,0.14) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.56), 0 6px 12px rgba(76,57,38,0.13) !important;
+    }
+
+    html.light-mode.compact-mode .tile.named {
+      background: linear-gradient(135deg, rgba(176,107,138,0.48), rgba(102,143,114,0.32)) !important;
+    }
+
+    html.light-mode.compact-mode .player-empty {
+      background: rgba(255,255,255,0.38) !important;
+    }
+
+    html.compact-mode .overlay-tools {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html.compact-mode .overlay-tools button {
+      width: 100% !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+    }
+  
+
+    /* v0.13: unify picker control button typography */
+    .controls button,
+    .controls #shuffleAllBtn,
+    .controls #shuffleUnlockedBtn,
+    .controls #resetBtn,
+    .controls #clearNamesBtn,
+    .controls #copyBtn,
+    .controls #lockAllBtn {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+      font-style: normal !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.005em !important;
+      text-transform: none !important;
+      line-height: 1.08 !important;
+    }
+
+    html.compact-mode .controls button,
+    html.compact-mode .controls #shuffleAllBtn,
+    html.compact-mode .controls #shuffleUnlockedBtn,
+    html.compact-mode .controls #resetBtn,
+    html.compact-mode .controls #clearNamesBtn,
+    html.compact-mode .controls #copyBtn,
+    html.compact-mode .controls #lockAllBtn {
+      min-height: 34px !important;
+      padding: 4px 5px !important;
+      font-size: 0.70rem !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.005em !important;
+      line-height: 1.08 !important;
+      border-radius: 11px !important;
+    }
+</style>
+
+  <script>
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.has('compact') || localStorage.getItem('ruinsPicker.compact.v1') === 'true') {
+        document.documentElement.classList.add('compact-mode');
+      }
+      if (new URLSearchParams(location.search).has('light') || localStorage.getItem('ruinsPicker.theme.v1') === 'light') {
+        document.documentElement.classList.add('light-mode');
+      }
+      document.documentElement.style.setProperty('--glass-opacity', '0.78');
+      document.documentElement.style.setProperty('--glass-strong-opacity', '0.88');
+    } catch {}
+  </script>
+</head>
+<body>
+  <div class="splash" id="splash" aria-label="Loading Ruins Battlefield Picker">
+    <div class="splash-card" role="status" aria-live="polite">
+      <h2 class="splash-title">[OOF] OrganizedChaos</h2>
+      <div class="splash-bar" aria-hidden="true"><div class="splash-bar-fill"></div></div>
+      <p class="splash-subtitle">loading ruins battlefield picker...</p>
+    </div>
+  </div>
+
+  <main class="app-shell" id="app">
+    <section class="hero">
+      <div class="brand-card">
+        <div class="logo-row title-row">
+          <div>
+            <h1>Ruins Picker<span class="mode-pill" id="modePill">v1.4</span></h1>
+            <p class="tagline">Random chaos, precisely organized.</p>
+            <div class="overlay-tools" aria-label="Overlay display controls">
+              <button class="btn-ghost" id="compactBtn" type="button">Compact Overlay</button>
+              <button class="btn-ghost" id="themeBtn" type="button">Light Mode</button>
+              <label class="opacity-control" for="opacityRange">
+                Glass
+                <input id="opacityRange" type="range" min="35" max="90" value="68" />
+                <span id="opacityValue">68%</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mini-stats" aria-label="Ruins spot counts">
+        <div class="stat"><strong>4</strong><span>Main</span></div>
+        <div class="stat"><strong>8</strong><span>Subs</span></div>
+        <div class="stat"><strong>8</strong><span>No Soup</span></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="stack">
+        <section class="card controls-card">
+          <div class="card-title">
+            <div>
+              <h2>Control Panel</h2>
+              <div class="hint"><i>Locks stay put when using Shuffle Unlocked.</i></div>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="btn-primary" id="shuffleAllBtn">Shuffle All</button>
+            <button class="btn-green" id="shuffleUnlockedBtn">Shuffle Unlocked</button>
+            <button class="btn-ghost" id="resetBtn">Reset Numbers</button>
+            <button class="btn-ghost" id="clearNamesBtn">Clear Names</button>
+            <button class="btn-berry" id="copyBtn">Copy Results</button>
+            <button class="btn-green" id="lockAllBtn" type="button">Lock All</button>
+          </div>
+        </section>
+
+        <section class="category main" aria-labelledby="main-title">
+          <div class="category-head">
+            <h3 id="main-title">Main Spots</h3>
+            <span class="category-count">4 picks</span>
+          </div>
+          <div class="tile-grid" id="mainGrid"></div>
+        </section>
+
+        <section class="category subs" aria-labelledby="subs-title">
+          <div class="category-head">
+            <h3 id="subs-title">Substitute Spots</h3>
+            <span class="category-count">8 picks</span>
+          </div>
+          <div class="tile-grid" id="subsGrid"></div>
+        </section>
+
+        <section class="category soup" aria-labelledby="soup-title">
+          <div class="category-head">
+            <h3 id="soup-title">No Soup For You</h3>
+            <span class="category-count">8 picks</span>
+          </div>
+          <div class="tile-grid" id="soupGrid"></div>
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="card players-card" id="playersCard">
+          <div class="card-title">
+            <div>
+              <h2>Player List</h2>
+              <div class="hint"><i>Player names added are stored locally.</i></div>
+            </div>
+            <button class="btn-ghost collapse-btn" id="togglePlayersBtn" type="button">Hide</button>
+          </div>
+          <div class="player-panel" id="playerPanel">
+          <form class="player-form" id="playerForm">
+            <input id="playerInput" autocomplete="off" placeholder="Add player name..." />
+            <button class="btn-primary" type="submit">Add</button>
+          </form>
+          <div class="controls" style="margin-bottom: .85rem;">
+            <button class="btn-ghost" id="pasteListBtn" type="button">Paste List</button>
+            <button class="btn-danger" id="clearPlayersBtn" type="button">Clear List</button>
+          </div>
+          <div class="player-list" id="playerList"></div>
+          </div>
+        </section>
+
+        <section class="card history-card">
+          <div class="card-title">
+            <div>
+              <h2>Saved Rolls</h2>
+              <div class="hint"><i>Copied Results saves a quick history here.</i></div>
+            </div>
+          </div>
+          <div class="history-list" id="historyList"></div>
+          <button class="history-purge-link" id="purgeHistoryBtn" type="button">purge saved rolls</button>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="tileModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="card-title">
+        <div>
+          <h2 id="modalTitle">Selected Spot</h2>
+          <div class="hint" id="modalHint"></div>
+        </div>
+        <button class="btn-ghost" id="closeModalBtn" type="button">Close</button>
+      </div>
+      <label class="small" for="playerSelect">Replace with player</label>
+      <select id="playerSelect"></select>
+      <div class="modal-actions two">
+        <button class="btn-green" id="applyPlayerBtn" type="button">Apply Player</button>
+        <button class="btn-ghost" id="clearTileNameBtn" type="button">Clear Name</button>
+        <button class="btn-ghost" id="lockTileBtn" type="button">Lock / Unlock</button>
+        <button class="btn-berry" id="swapTileBtn" type="button">Start Swap</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="pasteModal" role="dialog" aria-modal="true" aria-labelledby="pasteTitle">
+    <div class="modal">
+      <div class="card-title">
+        <div>
+          <h2 id="pasteTitle">Paste Player List</h2>
+          <div class="hint">One name per line, or names separated by commas.</div>
+        </div>
+        <button class="btn-ghost" id="closePasteBtn" type="button">Close</button>
+      </div>
+      <textarea id="pasteArea" placeholder="Azralex&#10;PlatinumBoy&#10;PennyAxa"></textarea>
+      <div class="modal-actions two">
+        <button class="btn-primary" id="importListBtn" type="button">Import Names</button>
+        <button class="btn-ghost" id="cancelPasteBtn" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied</div>
+
+  <script>
+    const STORE_KEYS = {
+      players: 'ruinsPicker.players.v1',
+      slots: 'ruinsPicker.slots.v1',
+      history: 'ruinsPicker.history.v1',
+      compact: 'ruinsPicker.compact.v1',
+      opacity: 'ruinsPicker.opacity.v1',
+      playersCollapsed: 'ruinsPicker.playersCollapsed.v1',
+      theme: 'ruinsPicker.theme.v1'
+    };
+
+    const CATEGORIES = [
+      { key: 'main', label: 'MAIN SPOTS', size: 4, gridId: 'mainGrid' },
+      { key: 'subs', label: 'SUBSTITUTE SPOTS', size: 8, gridId: 'subsGrid' },
+      { key: 'soup', label: 'NO SOUP FOR YOU', size: 8, gridId: 'soupGrid' }
+    ];
+
+    let players = [];
+    let slots = createDefaultSlots();
+    let history = [];
+    let selectedRef = null;
+    let swapRef = null;
+    let compactMode = false;
+    let glassOpacity = 68;
+    let playersCollapsed = false;
+    let themeMode = 'dark';
+
+    const $ = (id) => document.getElementById(id);
+
+    window.addEventListener('load', () => {
+      setTimeout(() => $('splash').classList.add('hide'), 3150);
+      loadState();
+      renderAll();
+      registerServiceWorker();
+    });
+
+    function createDefaultSlots() {
+      const nums = Array.from({ length: 20 }, (_, i) => ({ number: i + 1, name: '', locked: false }));
+      return splitIntoCategories(nums);
+    }
+
+    function splitIntoCategories(items) {
+      const out = {};
+      let offset = 0;
+      CATEGORIES.forEach(cat => {
+        out[cat.key] = items.slice(offset, offset + cat.size);
+        offset += cat.size;
+      });
+      return out;
+    }
+
+    function flattenSlots() {
+      return CATEGORIES.flatMap(cat => slots[cat.key].map((slot, index) => ({ ...slot, category: cat.key, index })));
+    }
+
+    function loadState() {
+      players = readJson(STORE_KEYS.players, []);
+      slots = readJson(STORE_KEYS.slots, createDefaultSlots());
+      history = readJson(STORE_KEYS.history, []);
+      compactMode = new URLSearchParams(location.search).has('compact') || localStorage.getItem(STORE_KEYS.compact) === 'true';
+      // v0.9: fixed standard transparency. No more glass slider or saved light opacity.
+      glassOpacity = 78;
+      localStorage.setItem(STORE_KEYS.opacity, String(glassOpacity));
+      playersCollapsed = localStorage.getItem(STORE_KEYS.playersCollapsed) === 'true';
+      themeMode = new URLSearchParams(location.search).has('light') ? 'light' : (localStorage.getItem(STORE_KEYS.theme) || 'dark');
+      if (!slots.main || !slots.subs || !slots.soup) slots = createDefaultSlots();
+      applyUiSettings();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORE_KEYS.players, JSON.stringify(players));
+      localStorage.setItem(STORE_KEYS.slots, JSON.stringify(slots));
+      localStorage.setItem(STORE_KEYS.history, JSON.stringify(history));
+      localStorage.setItem(STORE_KEYS.compact, String(compactMode));
+      localStorage.setItem(STORE_KEYS.opacity, String(glassOpacity));
+      localStorage.setItem(STORE_KEYS.playersCollapsed, String(playersCollapsed));
+      localStorage.setItem(STORE_KEYS.theme, themeMode);
+    }
+
+    function readJson(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+      catch { return fallback; }
+    }
+
+    function renderAll() {
+      applyUiSettings();
+      renderSlots();
+      renderPlayers();
+      renderHistory();
+      updateLockAllButton();
+      saveState();
+    }
+
+
+    function applyUiSettings() {
+      document.documentElement.classList.toggle('compact-mode', compactMode);
+      document.documentElement.classList.toggle('light-mode', themeMode === 'light');
+      document.body?.classList.toggle('compact-mode', compactMode);
+      document.body?.classList.toggle('light-mode', themeMode === 'light');
+      const opacity = Math.min(90, Math.max(35, glassOpacity)) / 100;
+      document.documentElement.style.setProperty('--glass-opacity', opacity.toFixed(2));
+      document.documentElement.style.setProperty('--glass-strong-opacity', Math.min(0.96, opacity + 0.14).toFixed(2));
+      if ($('compactBtn')) $('compactBtn').textContent = compactMode ? 'Full Mode' : 'Compact Overlay';
+      if ($('modePill')) $('modePill').textContent = compactMode ? 'COMPACT' : 'v1.4';
+      if ($('themeBtn')) $('themeBtn').textContent = themeMode === 'light' ? 'Dark Mode' : 'Light Mode';
+      if ($('themeColorMeta')) $('themeColorMeta').setAttribute('content', themeMode === 'light' ? '#efe4d2' : '#08121d');
+      if ($('opacityRange')) $('opacityRange').value = String(Math.round(opacity * 100));
+      if ($('opacityValue')) $('opacityValue').textContent = `${Math.round(opacity * 100)}%`;
+      if ($('playersCard')) $('playersCard').classList.toggle('collapsed', playersCollapsed);
+      if ($('togglePlayersBtn')) $('togglePlayersBtn').textContent = playersCollapsed ? 'Show' : 'Hide';
+    }
+
+    function renderSlots() {
+      CATEGORIES.forEach(cat => {
+        const grid = $(cat.gridId);
+        grid.innerHTML = '';
+        slots[cat.key].forEach((slot, index) => {
+          const tile = document.createElement('button');
+          tile.className = 'tile' + (slot.name ? ' named' : '') + (slot.locked ? ' locked' : '') + (swapRef && swapRef.category === cat.key && swapRef.index === index ? ' swap-pending' : '');
+          tile.type = 'button';
+          tile.textContent = slot.name || slot.number;
+          tile.title = `Original number ${slot.number}`;
+          tile.addEventListener('click', () => onTileClick(cat.key, index));
+          grid.appendChild(tile);
+        });
+      });
+    }
+
+    function renderPlayers() {
+      const list = $('playerList');
+      list.innerHTML = '';
+      if (!players.length) {
+        const empty = document.createElement('div');
+        empty.className = 'player-empty';
+        empty.innerHTML = 'No players yet. Add names here, then tap a number to replace it with a player.';
+        list.appendChild(empty);
+        return;
+      }
+      players.forEach((name, index) => {
+        const row = document.createElement('div');
+        row.className = 'player-row';
+        const span = document.createElement('span');
+        span.textContent = name;
+        const btn = document.createElement('button');
+        btn.className = 'btn-danger';
+        btn.type = 'button';
+        btn.textContent = 'Remove';
+        btn.addEventListener('click', () => {
+          players.splice(index, 1);
+          renderAll();
+        });
+        row.append(span, btn);
+        list.appendChild(row);
+      });
+    }
+
+    function renderHistory() {
+      const list = $('historyList');
+      list.innerHTML = '';
+      if (!history.length) {
+        const empty = document.createElement('div');
+        empty.className = 'history-item';
+        empty.textContent = 'No saved rolls yet.';
+        list.appendChild(empty);
+        return;
+      }
+      history.slice(0, 4).forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<strong>${escapeHtml(item.time)}</strong>${escapeHtml(item.summary)}`;
+        list.appendChild(div);
+      });
+    }
+
+    function onTileClick(category, index) {
+      if (swapRef) {
+        swapTiles(swapRef, { category, index });
+        swapRef = null;
+        renderAll();
+        showToast('Spots swapped');
+        return;
+      }
+      selectedRef = { category, index };
+      const slot = slots[category][index];
+      $('modalTitle').textContent = `Selected Spot: ${slot.name || slot.number}`;
+      $('modalHint').textContent = slot.name ? `Original number: ${slot.number}` : `Number ${slot.number}`;
+      fillPlayerSelect();
+      $('lockTileBtn').textContent = slot.locked ? 'Unlock Spot' : 'Lock Spot';
+      $('tileModal').classList.add('show');
+    }
+
+    function fillPlayerSelect() {
+      const select = $('playerSelect');
+      select.innerHTML = '';
+      if (!players.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Add players first';
+        select.appendChild(opt);
+        select.disabled = true;
+        $('applyPlayerBtn').disabled = true;
+        return;
+      }
+      select.disabled = false;
+      $('applyPlayerBtn').disabled = false;
+      players.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+    }
+
+    function closeTileModal() {
+      $('tileModal').classList.remove('show');
+      selectedRef = null;
+    }
+
+    function addPlayer(name) {
+      const clean = name.trim();
+      if (!clean) return;
+      const exists = players.some(p => p.toLowerCase() === clean.toLowerCase());
+      if (exists) return showToast('Player already exists');
+      players.push(clean);
+      players.sort((a,b) => a.localeCompare(b));
+      $('playerInput').value = '';
+      renderAll();
+      showToast('Player added');
+    }
+
+    function shuffleArray(array) {
+      const copy = array.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function shuffleAll() {
+      const all = shuffleArray(flattenSlots().map(({ category, index, ...slot }) => slot));
+      slots = splitIntoCategories(all);
+      renderAll();
+      showToast('All spots shuffled');
+    }
+
+    function shuffleUnlocked() {
+      const current = flattenSlots();
+      const unlockedRefs = current.filter(item => !item.locked).map(item => ({ category: item.category, index: item.index }));
+      const unlockedItems = shuffleArray(current.filter(item => !item.locked).map(({ category, index, ...slot }) => slot));
+      unlockedRefs.forEach((ref, i) => { slots[ref.category][ref.index] = unlockedItems[i]; });
+      renderAll();
+      showToast('Unlocked spots shuffled');
+    }
+
+    function resetNumbers() {
+      slots = createDefaultSlots();
+      swapRef = null;
+      renderAll();
+      showToast('Numbers reset');
+    }
+
+    function clearNames() {
+      CATEGORIES.forEach(cat => slots[cat.key].forEach(slot => { slot.name = ''; }));
+      renderAll();
+      showToast('Names cleared');
+    }
+
+    function allSlotsLocked() {
+      return flattenSlots().every(slot => slot.locked);
+    }
+
+    function updateLockAllButton() {
+      const btn = $('lockAllBtn');
+      if (!btn) return;
+      btn.textContent = allSlotsLocked() ? 'Unlock All' : 'Lock All';
+    }
+
+    function toggleLockAll() {
+      const lock = !allSlotsLocked();
+      CATEGORIES.forEach(cat => slots[cat.key].forEach(slot => { slot.locked = lock; }));
+      renderAll();
+      showToast(lock ? 'All spots locked' : 'All spots unlocked');
+    }
+
+    function swapTiles(a, b) {
+      const temp = slots[a.category][a.index];
+      slots[a.category][a.index] = slots[b.category][b.index];
+      slots[b.category][b.index] = temp;
+    }
+
+    function formatCategory(cat) {
+      return slots[cat.key].map(slot => slot.name || slot.number).join(', ');
+    }
+
+    function formatResults() {
+      return `🏛️ RUINS PICKER RESULTS\n\nMAIN SPOTS\n${formatCategory(CATEGORIES[0])}\n\nSUBSTITUTE SPOTS\n${formatCategory(CATEGORIES[1])}\n\nNO SOUP FOR YOU\n${formatCategory(CATEGORIES[2])}`;
+    }
+
+    function saveHistory() {
+      const now = new Date();
+      const time = now.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      history.unshift({ time, summary: `Main: ${formatCategory(CATEGORIES[0])}` });
+      history = history.slice(0, 8);
+      saveState();
+      renderHistory();
+    }
+
+
+
+    function purgeSavedRolls() {
+      if (!history.length) {
+        showToast('No saved rolls to purge');
+        return;
+      }
+      if (!confirm('Purge all saved rolls? Player list will stay saved.')) return;
+      history = [];
+      localStorage.setItem(STORE_KEYS.history, JSON.stringify(history));
+      renderHistory();
+      showToast('Saved rolls purged');
+    }
+
+    async function copyResults() {
+      const text = formatResults();
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        temp.remove();
+      }
+      saveHistory();
+      showToast('Results copied');
+    }
+
+    function showToast(message) {
+      const toast = $('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 1600);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+    }
+
+    $('playerForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      addPlayer($('playerInput').value);
+    });
+
+    $('shuffleAllBtn').addEventListener('click', shuffleAll);
+    $('shuffleUnlockedBtn').addEventListener('click', shuffleUnlocked);
+    $('resetBtn').addEventListener('click', resetNumbers);
+    $('clearNamesBtn').addEventListener('click', clearNames);
+    $('copyBtn').addEventListener('click', copyResults);
+    $('purgeHistoryBtn').addEventListener('click', purgeSavedRolls);
+    $('lockAllBtn').addEventListener('click', toggleLockAll);
+
+    $('compactBtn').addEventListener('click', () => {
+      compactMode = !compactMode;
+      if (compactMode) playersCollapsed = true;
+      applyUiSettings();
+      saveState();
+      showToast(compactMode ? 'Compact overlay mode on' : 'Full mode on');
+    });
+
+    $('themeBtn').addEventListener('click', () => {
+      themeMode = themeMode === 'light' ? 'dark' : 'light';
+      applyUiSettings();
+      saveState();
+      showToast(themeMode === 'light' ? 'Light mode on' : 'Dark mode on');
+    });
+
+    $('opacityRange').addEventListener('input', (event) => {
+      glassOpacity = Number(event.target.value);
+      applyUiSettings();
+      saveState();
+    });
+
+    $('togglePlayersBtn').addEventListener('click', () => {
+      playersCollapsed = !playersCollapsed;
+      applyUiSettings();
+      saveState();
+    });
+
+    $('closeModalBtn').addEventListener('click', closeTileModal);
+    $('tileModal').addEventListener('click', (event) => { if (event.target.id === 'tileModal') closeTileModal(); });
+
+    $('applyPlayerBtn').addEventListener('click', () => {
+      if (!selectedRef) return;
+      const name = $('playerSelect').value;
+      if (!name) return;
+      slots[selectedRef.category][selectedRef.index].name = name;
+      closeTileModal();
+      renderAll();
+      showToast('Player applied');
+    });
+
+    $('clearTileNameBtn').addEventListener('click', () => {
+      if (!selectedRef) return;
+      slots[selectedRef.category][selectedRef.index].name = '';
+      closeTileModal();
+      renderAll();
+      showToast('Name cleared');
+    });
+
+    $('lockTileBtn').addEventListener('click', () => {
+      if (!selectedRef) return;
+      const slot = slots[selectedRef.category][selectedRef.index];
+      slot.locked = !slot.locked;
+      closeTileModal();
+      renderAll();
+      showToast(slot.locked ? 'Spot locked' : 'Spot unlocked');
+    });
+
+    $('swapTileBtn').addEventListener('click', () => {
+      if (!selectedRef) return;
+      swapRef = selectedRef;
+      closeTileModal();
+      renderAll();
+      showToast('Tap another spot to swap');
+    });
+
+    $('pasteListBtn').addEventListener('click', () => $('pasteModal').classList.add('show'));
+    $('closePasteBtn').addEventListener('click', () => $('pasteModal').classList.remove('show'));
+    $('cancelPasteBtn').addEventListener('click', () => $('pasteModal').classList.remove('show'));
+    $('pasteModal').addEventListener('click', (event) => { if (event.target.id === 'pasteModal') $('pasteModal').classList.remove('show'); });
+
+    $('importListBtn').addEventListener('click', () => {
+      const raw = $('pasteArea').value;
+      const names = raw.split(/[\n,]+/).map(name => name.trim()).filter(Boolean);
+      let added = 0;
+      names.forEach(name => {
+        if (!players.some(p => p.toLowerCase() === name.toLowerCase())) {
+          players.push(name);
+          added++;
+        }
+      });
+      players.sort((a,b) => a.localeCompare(b));
+      $('pasteArea').value = '';
+      $('pasteModal').classList.remove('show');
+      renderAll();
+      showToast(`${added} names imported`);
+    });
+
+    $('clearPlayersBtn').addEventListener('click', () => {
+      if (!players.length) return;
+      if (!confirm('Clear the saved player list?')) return;
+      players = [];
+      renderAll();
+      showToast('Player list cleared');
+    });
+
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {});
+      }
+    }
+  </script>
+</body>
+</html>
