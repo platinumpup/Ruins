@@ -1,10 +1,13 @@
-const CACHE_NAME = 'ruins-picker-v14';
+const CACHE_NAME = 'ruins-picker-v21';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './apple-touch-icon.png',
+  './favicon-32.png',
+  './favicon-64.png'
 ];
 
 self.addEventListener('install', (event) => {
